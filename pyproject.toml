@@ -1,0 +1,10 @@
+[project]
+name = "rail-db"
+version = "0.1.0"
+description = "PostgreSQL database connection with Railway"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "psycopg2-binary>=2.9.0",
+    "python-dotenv>=1.0.0",
+]
