@@ -1,172 +1,139 @@
-from database import DatabaseManager, DatabaseConnection
+"""
+Main application entry point for Railway PostgreSQL Database Project
+"""
+from database import DatabaseManager
+from database_tests import run_all_tests
+from advanced_demo import run_advanced_demo
+from import_student_data import run_student_data_import, get_student_data_summary
 
-def test_basic_connection():
-    """Test basic database connection"""
-    print("🔄 Testing database connection...")
-    
-    db = DatabaseConnection()
-    if db.connect():
-        # Test with a simple query
-        result = db.execute_query("SELECT version();")
-        if result:
-            print(f"📊 PostgreSQL Version: {result[0]['version']}")
-        
-        # List all tables in the database
-        tables = db.execute_query("""
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public';
-        """)
-        
-        if tables:
-            print(f"📋 Tables in database: {[table['table_name'] for table in tables]}")
-        else:
-            print("📋 No tables found in the database")
-        
-        db.disconnect()
-    else:
-        print("❌ Failed to connect to database. Please check your .env file.")
+def show_menu():
+    """Display the main application menu"""
+    print("\n" + "=" * 60)
+    print("🚀 RAILWAY POSTGRESQL DATABASE APPLICATION")
+    print("=" * 60)
+    print("Choose an option:")
+    print("1. 🔧 Run Database Connection Tests")
+    print("2. 🚀 Run Advanced Demo (with sample data)")
+    print("3. 📊 Quick Database Stats")
+    print("4. 🔍 Interactive Query Mode")
+    print("5. 📚 Student Grades Summary")
+    print("6. ❌ Exit")
+    print("-" * 60)
 
-def test_context_manager():
-    """Test database connection using context manager"""
-    print("\n🔄 Testing database connection with context manager...")
+def quick_stats():
+    """Display quick database statistics"""
+    print("\n📊 QUICK DATABASE STATISTICS")
+    print("-" * 40)
     
     try:
         with DatabaseManager() as db:
-            # Example: Create a more comprehensive test table
-            create_table = """
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(50) UNIQUE NOT NULL,
-                email VARCHAR(100) UNIQUE NOT NULL,
-                full_name VARCHAR(150),
-                age INTEGER,
-                city VARCHAR(100),
-                country VARCHAR(100),
-                is_active BOOLEAN DEFAULT TRUE,
-                salary DECIMAL(10, 2),
-                join_date DATE DEFAULT CURRENT_DATE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+            # Get table counts
+            tables_query = """
+                SELECT 
+                    schemaname,
+                    relname as tablename,
+                    n_tup_ins as inserts,
+                    n_tup_upd as updates,
+                    n_tup_del as deletes
+                FROM pg_stat_user_tables
+                ORDER BY relname;
             """
             
-            if db.execute_command(create_table):
-                print("✅ Users table created successfully!")
-                
-                # Sample data to insert
-                sample_users = [
-                    ("john_doe", "john.doe@email.com", "John Doe", 28, "New York", "USA", True, 75000.00),
-                    ("jane_smith", "jane.smith@email.com", "Jane Smith", 32, "London", "UK", True, 85000.50),
-                    ("carlos_rivera", "carlos.rivera@email.com", "Carlos Rivera", 25, "Madrid", "Spain", True, 55000.75),
-                    ("alice_wong", "alice.wong@email.com", "Alice Wong", 29, "Toronto", "Canada", False, 72000.00),
-                    ("muhammad_ali", "m.ali@email.com", "Muhammad Ali", 35, "Dubai", "UAE", True, 95000.25),
-                    ("sophie_martin", "sophie.martin@email.com", "Sophie Martin", 27, "Paris", "France", True, 68000.00),
-                    ("raj_patel", "raj.patel@email.com", "Raj Patel", 31, "Mumbai", "India", True, 45000.50),
-                    ("emma_johnson", "emma.j@email.com", "Emma Johnson", 26, "Sydney", "Australia", True, 78000.75),
-                    ("lars_nielsen", "lars.nielsen@email.com", "Lars Nielsen", 33, "Copenhagen", "Denmark", False, 82000.00),
-                    ("maria_garcia", "maria.garcia@email.com", "Maria Garcia", 30, "Mexico City", "Mexico", True, 52000.25)
-                ]
-                
-                # Insert sample data with conflict handling
-                insert_data = """
-                INSERT INTO users (username, email, full_name, age, city, country, is_active, salary) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s) 
-                ON CONFLICT (username) DO NOTHING
-                RETURNING id;
-                """
-                
-                inserted_count = 0
-                for user_data in sample_users:
-                    if db.execute_command(insert_data, user_data):
-                        inserted_count += 1
-                
-                print(f"✅ {inserted_count} users processed (new records or updates)!")
-                
-                # Query and display the data with various examples
-                print("\n📊 Sample Queries:")
-                
-                # 1. All users
-                all_users = db.execute_query("SELECT COUNT(*) as total_users FROM users;")
-                if all_users:
-                    print(f"👥 Total users in database: {all_users[0]['total_users']}")
-                
-                # 2. Active users by country
-                active_by_country = db.execute_query("""
-                    SELECT country, COUNT(*) as active_users, AVG(salary) as avg_salary
-                    FROM users 
-                    WHERE is_active = TRUE 
-                    GROUP BY country 
-                    ORDER BY active_users DESC;
-                """)
-                if active_by_country:
-                    print("\n🌍 Active users by country:")
-                    for row in active_by_country:
-                        print(f"   {row['country']}: {row['active_users']} users, Avg Salary: ${row['avg_salary']:,.2f}")
-                
-                # 3. Recent users (last 5)
-                recent_users = db.execute_query("""
-                    SELECT id, username, full_name, city, country, salary, created_at
-                    FROM users 
-                    ORDER BY created_at DESC 
-                    LIMIT 5;
-                """)
-                if recent_users:
-                    print("\n� Most recent users:")
-                    for user in recent_users:
-                        print(f"   {user['full_name']} (@{user['username']}) - {user['city']}, {user['country']} - ${user['salary']:,.2f}")
-                
-                # 4. Users by age range
-                age_ranges = db.execute_query("""
-                    SELECT 
-                        CASE 
-                            WHEN age < 25 THEN 'Under 25'
-                            WHEN age BETWEEN 25 AND 30 THEN '25-30'
-                            WHEN age BETWEEN 31 AND 35 THEN '31-35'
-                            ELSE 'Over 35'
-                        END as age_range,
-                        COUNT(*) as user_count,
-                        AVG(salary) as avg_salary
-                    FROM users 
-                    GROUP BY age_range 
-                    ORDER BY user_count DESC;
-                """)
-                if age_ranges:
-                    print("\n🎂 Users by age range:")
-                    for range_data in age_ranges:
-                        print(f"   {range_data['age_range']}: {range_data['user_count']} users, Avg Salary: ${range_data['avg_salary']:,.2f}")
-                
-                # 5. Top earners
-                top_earners = db.execute_query("""
-                    SELECT full_name, username, city, country, salary
-                    FROM users 
-                    WHERE is_active = TRUE
-                    ORDER BY salary DESC 
-                    LIMIT 3;
-                """)
-                if top_earners:
-                    print("\n💰 Top 3 earners:")
-                    for i, user in enumerate(top_earners, 1):
-                        print(f"   {i}. {user['full_name']} - {user['city']}, {user['country']} - ${user['salary']:,.2f}")
-    
+            tables = db.execute_query(tables_query)
+            if tables:
+                print("📋 Table Statistics:")
+                for table in tables:
+                    print(f"   📂 {table['tablename']}: {table['inserts']} inserts, {table['updates']} updates")
+            
+            # Get database size
+            size_query = "SELECT pg_size_pretty(pg_database_size(current_database())) as db_size;"
+            size_result = db.execute_query(size_query)
+            if size_result:
+                print(f"\n💾 Database Size: {size_result[0]['db_size']}")
+            
+            # Get user count if users table exists
+            user_count = db.execute_query("SELECT COUNT(*) as count FROM users WHERE 1=1;")
+            if user_count:
+                print(f"👥 Total Users: {user_count[0]['count']}")
+            
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Error getting stats: {e}")
+
+def interactive_query():
+    """Interactive query mode"""
+    print("\n🔍 INTERACTIVE QUERY MODE")
+    print("-" * 40)
+    print("Enter SQL queries (type 'exit' to return to menu)")
+    print("Example: SELECT * FROM users LIMIT 3;")
+    
+    try:
+        with DatabaseManager() as db:
+            while True:
+                query = input("\n🔍 SQL> ").strip()
+                
+                if query.lower() in ('exit', 'quit', 'back'):
+                    break
+                
+                if not query:
+                    continue
+                
+                try:
+                    if query.upper().startswith(('SELECT', 'WITH')):
+                        results = db.execute_query(query)
+                        if results:
+                            print(f"\n📊 Results ({len(results)} rows):")
+                            for i, row in enumerate(results):
+                                if i < 10:  # Limit display to first 10 rows
+                                    print(f"   {dict(row)}")
+                                elif i == 10:
+                                    print(f"   ... and {len(results) - 10} more rows")
+                                    break
+                        else:
+                            print("📊 No results returned")
+                    else:
+                        success = db.execute_command(query)
+                        if success:
+                            print("✅ Command executed successfully!")
+                        else:
+                            print("❌ Command failed")
+                            
+                except Exception as e:
+                    print(f"❌ Query error: {e}")
+                    
+    except Exception as e:
+        print(f"❌ Error in interactive mode: {e}")
 
 def main():
-    print("🚀 Railway PostgreSQL Connection Test")
-    print("=" * 50)
+    """Main application loop"""
+    print("🎉 Welcome to the Railway PostgreSQL Database Application!")
     
-    # Test basic connection
-    test_basic_connection()
-    
-    # Test context manager
-    test_context_manager()
-    
-    print("\n✨ Connection tests completed!")
-    print("\n💡 Next steps:")
-    print("1. Update your .env file with actual Railway database credentials")
-    print("2. Run this script to test your connection")
-    print("3. Start building your application!")
+    while True:
+        show_menu()
+        
+        try:
+            choice = input("\nEnter your choice (1-6): ").strip()
+            
+            if choice == '1':
+                run_all_tests()
+            elif choice == '2':
+                run_advanced_demo()
+            elif choice == '3':
+                quick_stats()
+            elif choice == '4':
+                interactive_query()
+            elif choice == '5':
+                get_student_data_summary()
+            elif choice == '6':
+                print("\n👋 Goodbye! Thanks for using the Railway PostgreSQL Database Application!")
+                break
+            else:
+                print("❌ Invalid choice. Please enter 1-6.")
+                
+        except KeyboardInterrupt:
+            print("\n\n👋 Application interrupted. Goodbye!")
+            break
+        except Exception as e:
+            print(f"\n❌ An error occurred: {e}")
 
 if __name__ == "__main__":
     main()

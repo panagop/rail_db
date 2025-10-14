@@ -69,9 +69,14 @@ A comprehensive Python application demonstrating PostgreSQL database connectivit
 
 ### Running the Application
 
-#### Basic Connection Test
+#### Main Application (Interactive Menu)
 ```bash
 uv run python main.py
+```
+
+#### Database Connection Tests
+```bash
+uv run python database_tests.py
 ```
 
 #### Advanced Demo with Relationships
@@ -96,9 +101,16 @@ The application includes several analytical queries:
 - Error handling and connection management
 
 ### `main.py`
+- Interactive menu application
+- Quick database statistics
+- Interactive SQL query mode
+- Integration point for all modules
+
+### `database_tests.py`
 - Basic connection testing
 - Sample data insertion
 - Basic analytical queries
+- Database functionality validation
 
 ### `advanced_demo.py`  
 - `UserOperations`: Advanced database operations
