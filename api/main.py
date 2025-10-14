@@ -3,7 +3,8 @@ Main FastAPI application
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import students_router, analytics_router
+from .routers.students import router as students_router
+from .routers.analytics import router as analytics_router
 from database import DatabaseManager
 
 # Create FastAPI app
@@ -92,12 +93,14 @@ async def shutdown_event():
 
 if __name__ == "__main__":
     import uvicorn
+    import os
     
-    print("🚀 Starting FastAPI development server...")
+    port = int(os.getenv("PORT", 8000))
+    print(f"🚀 Starting FastAPI server on port {port}...")
     uvicorn.run(
         "api.main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=port,
+        reload=False,  # Disable reload in production
         log_level="info"
     )
