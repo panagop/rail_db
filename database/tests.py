@@ -1,7 +1,7 @@
 """
 Database connection and functionality tests
 """
-from database import DatabaseManager, DatabaseConnection
+from .connection import DatabaseManager, DatabaseConnection
 
 def test_basic_connection():
     """Test basic database connection"""

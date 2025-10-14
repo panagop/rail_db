@@ -2,9 +2,9 @@
 Main application entry point for Railway PostgreSQL Database Project
 """
 from database import DatabaseManager
-from database_tests import run_all_tests
-from advanced_demo import run_advanced_demo
-from import_student_data import run_student_data_import, get_student_data_summary
+from database.tests import run_all_tests
+from database.demo import run_advanced_demo
+from database.student_utils import get_student_data_summary
 
 def show_menu():
     """Display the main application menu"""

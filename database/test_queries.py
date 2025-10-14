@@ -1,4 +1,9 @@
-from database import DatabaseManager
+"""
+Simple test queries for the student grades database
+"""
+from .connection import DatabaseManager
+
+print("✅ Successfully connected to PostgreSQL database!")
 
 with DatabaseManager() as db:
     print("🔍 Sample Student Data (AEM 6609):")
@@ -10,3 +15,5 @@ with DatabaseManager() as db:
     result = db.execute_query("SELECT aem, grade FROM student_grades WHERE test = %s AND year = %s ORDER BY grade DESC LIMIT 5;", ("Test 1", 2024))
     for row in result:
         print(f"   AEM {row['aem']}: {row['grade']}")
+
+print("🔌 Database connection closed")

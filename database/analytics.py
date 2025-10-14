@@ -1,10 +1,15 @@
 """
 Student grades analysis and sample queries
 """
-from database import DatabaseManager
+from .connection import DatabaseManager
 
-def run_student_analysis():
-    """Run various analytical queries on student grades data"""
+
+class StudentAnalytics:
+    """Class to handle student grades analytics and reporting"""
+    
+    @staticmethod
+    def run_analysis():
+        """Run various analytical queries on student grades data"""
     print("🎓 STUDENT GRADES ANALYSIS")
     print("=" * 60)
     
@@ -162,4 +167,4 @@ def run_student_analysis():
         print(f"❌ Error running analysis: {e}")
 
 if __name__ == "__main__":
-    run_student_analysis()
+    StudentAnalytics.run_analysis()

@@ -1,7 +1,7 @@
 """
 Advanced database operations and examples
 """
-from database import DatabaseManager
+from .connection import DatabaseManager
 from datetime import datetime, date
 import random
 
