@@ -17,19 +17,43 @@ class DatabaseConnection:
     def connect(self):
         """Connect to the PostgreSQL database using DATABASE_URL or individual components"""
         try:
-            # Try to use DATABASE_URL first (recommended for Railway)
+            # Debug: Check all environment variables
             database_url = os.getenv('DATABASE_URL')
-            
+            print(f"🔍 DEBUG - DATABASE_URL exists: {database_url is not None}")
             if database_url:
+                print(f"🔍 DEBUG - DATABASE_URL starts with: {database_url[:20]}...")
+            
+            # Check Railway-specific variables
+            railway_vars = [
+                'PGHOST', 'PGPORT', 'PGDATABASE', 'PGUSER', 'PGPASSWORD',
+                'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'
+            ]
+            for var in railway_vars:
+                value = os.getenv(var)
+                if value:
+                    print(f"🔍 DEBUG - {var}: {'*' * 10 if 'PASS' in var else value}")
+            
+            # Try to use DATABASE_URL first (recommended for Railway)
+            if database_url:
+                print("🔄 Attempting connection with DATABASE_URL...")
                 self.connection = psycopg2.connect(database_url)
             else:
-                # Fallback to individual components
+                print("🔄 DATABASE_URL not found, trying individual components...")
+                # Try Railway's individual PostgreSQL variables
+                host = os.getenv('PGHOST') or os.getenv('DB_HOST', 'localhost')
+                port = os.getenv('PGPORT') or os.getenv('DB_PORT', '5432')
+                database = os.getenv('PGDATABASE') or os.getenv('DB_NAME', 'postgres')
+                user = os.getenv('PGUSER') or os.getenv('DB_USER', 'postgres')
+                password = os.getenv('PGPASSWORD') or os.getenv('DB_PASSWORD', '')
+                
+                print(f"🔄 Connecting to: {host}:{port}/{database} as {user}")
+                
                 self.connection = psycopg2.connect(
-                    host=os.getenv('DB_HOST'),
-                    port=os.getenv('DB_PORT', 5432),
-                    database=os.getenv('DB_NAME'),
-                    user=os.getenv('DB_USER'),
-                    password=os.getenv('DB_PASSWORD')
+                    host=host,
+                    port=int(port),
+                    database=database,
+                    user=user,
+                    password=password
                 )
             
             # Use RealDictCursor to get results as dictionaries
