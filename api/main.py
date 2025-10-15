@@ -12,7 +12,7 @@ from database import DatabaseManager
 app = FastAPI(
     title="Rail DB Student Grades API",
     description="API for managing student grades data with PostgreSQL backend and LaTeX equations",
-    version="1.1.0",
+    version="1.1.1",
     docs_url="/docs",
     redoc_url="/redoc"
 )
