@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .routers.students import router as students_router
 from .routers.analytics import router as analytics_router
+from .routers.latex.fragility import router as latex_router
 from database import DatabaseManager
 
 # Create FastAPI app
@@ -28,6 +29,7 @@ app.add_middleware(
 # Include routers
 app.include_router(students_router)
 app.include_router(analytics_router)
+app.include_router(latex_router)
 
 
 @app.get("/")
@@ -40,7 +42,8 @@ async def root():
         "redoc": "/redoc",
         "endpoints": {
             "students": "/students",
-            "analytics": "/analytics"
+            "analytics": "/analytics",
+            "latex": "/latex"
         }
     }
 

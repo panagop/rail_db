@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fragility Curve Equation Viewer</title>
+    
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- MathJax configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                ready: function () {
+                    MathJax.startup.defaultReady();
+                    console.log('MathJax is ready!');
+                    // Trigger equation loading once MathJax is ready
+                    if (document.readyState === 'complete') {
+                        loadEquation();
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin: 0;
+        }
+
+        .equation-section {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+
+        .equation-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .equation-title::before {
+            content: "📐";
+            font-size: 1.2em;
+        }
+
+        .equation-display {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            border: 2px solid #e3f2fd;
+            font-size: 1.2em;
+        }
+
+        .description {
+            color: #555;
+            font-style: italic;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        .variables-section {
+            background: #f0f8ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .variables-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .variables-title::before {
+            content: "📊";
+            font-size: 1.1em;
+        }
+
+        .variable-item {
+            background: white;
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .variable-symbol {
+            font-family: 'Times New Roman', serif;
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 120px;
+            background: #f8f9ff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+
+        .variable-description {
+            flex: 1;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #d63031;
+            border: 2px solid #fab1a0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .error::before {
+            content: "⚠️ ";
+            font-size: 1.2em;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 20px auto;
+            display: block;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .api-info {
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .api-info strong {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Fragility Curve Equation</h1>
+            <p>Seismic Damage State Probability Analysis</p>
+        </div>
+
+        <div class="api-info">
+            <strong>API Endpoint:</strong> http://127.0.0.1:8000/latex/fragility/basic
+        </div>
+
+        <div id="content">
+            <div class="loading">Loading equation data...</div>
+        </div>
+
+        <button class="refresh-btn" onclick="loadEquation()">🔄 Refresh Equation</button>
+    </div>
+
+    <script>
+        async function loadEquation() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '<div class="loading">Loading equation data...</div>';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/latex/fragility/basic');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Create the content HTML
+                let html = `
+                    <div class="equation-section">
+                        <div class="equation-title">${data.name}</div>
+                        <div class="description">${data.description}</div>
+                        <div class="equation-display">
+                            $$${data.latex}$$
+                        </div>
+                        <div class="description">
+                            <strong>Category:</strong> ${data.category}
+                        </div>
+                    </div>
+                `;
+
+                // Add variables section if available
+                if (data.variables && Object.keys(data.variables).length > 0) {
+                    html += `
+                        <div class="variables-section">
+                            <div class="variables-title">Variable Definitions</div>
+                    `;
+                    
+                    for (const [symbol, description] of Object.entries(data.variables)) {
+                        html += `
+                            <div class="variable-item">
+                                <div class="variable-symbol">$${symbol}$</div>
+                                <div class="variable-description">${description}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `</div>`;
+                }
+
+                contentDiv.innerHTML = html;
+                
+                // Re-render MathJax with proper loading check
+                renderMathJax(contentDiv);
+                
+            } catch (error) {
+                console.error('Error loading equation:', error);
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        Failed to load equation data: ${error.message}
+                        <br><br>
+                        Make sure the FastAPI server is running at http://127.0.0.1:8000
+                    </div>
+                `;
+            }
+        }
+
+        // Function to safely render MathJax
+        function renderMathJax(element) {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise([element]).catch(function (err) {
+                    console.log('MathJax typeset failed: ' + err.message);
+                });
+            } else {
+                // MathJax not ready yet, wait and try again
+                console.log('MathJax not ready, waiting...');
+                setTimeout(() => renderMathJax(element), 100);
+            }
+        }
+
+        // Function to wait for MathJax to be fully loaded
+        function waitForMathJax(callback) {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                callback();
+            } else {
+                setTimeout(() => waitForMathJax(callback), 100);
+            }
+        }
+
+        // Load equation when page loads - wait for MathJax first
+        document.addEventListener('DOMContentLoaded', function() {
+            waitForMathJax(loadEquation);
+        });
+
+        // Reload equation every 30 seconds to keep it fresh
+        setInterval(loadEquation, 30000);
+    </script>
+</body>
+</html>
