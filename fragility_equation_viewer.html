@@ -242,7 +242,7 @@
         </div>
 
         <div class="api-info">
-            <strong>API Endpoint:</strong> http://127.0.0.1:8000/latex/fragility/basic
+            <strong>API Endpoint:</strong> https://raildb-production.up.railway.app/latex/fragility/basic
         </div>
 
         <div id="content">
@@ -258,7 +258,7 @@
             contentDiv.innerHTML = '<div class="loading">Loading equation data...</div>';
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/latex/fragility/basic');
+                const response = await fetch('https://raildb-production.up.railway.app/latex/fragility/basic');
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -310,7 +310,7 @@
                     <div class="error">
                         Failed to load equation data: ${error.message}
                         <br><br>
-                        Make sure the FastAPI server is running at http://127.0.0.1:8000
+                        Make sure the FastAPI server is running at https://raildb-production.up.railway.app
                     </div>
                 `;
             }
