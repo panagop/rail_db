@@ -4,10 +4,37 @@ LaTeX equations router for structural engineering formulas
 from fastapi import APIRouter, HTTPException, Query
 from typing import List
 import math
-import scipy.stats as stats
 from ...models.latex_models import LatexEquation, ParameterizedEquation, FragilityParameters
 
 router = APIRouter(prefix="/latex", tags=["latex"])
+
+
+def standard_normal_cdf(z: float) -> float:
+    """Calculate standard normal cumulative distribution function using built-in math functions"""
+    # Using the error function approximation
+    # Φ(z) = 0.5 * (1 + erf(z / sqrt(2)))
+    # erf approximation using Abramowitz and Stegun
+    
+    def erf_approx(x: float) -> float:
+        # Constants for approximation
+        a1 =  0.254829592
+        a2 = -0.284496736
+        a3 =  1.421413741
+        a4 = -1.453152027
+        a5 =  1.061405429
+        p  =  0.3275911
+        
+        # Save the sign of x
+        sign = 1 if x >= 0 else -1
+        x = abs(x)
+        
+        # A&S formula 7.1.26
+        t = 1.0 / (1.0 + p * x)
+        y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * math.exp(-x * x)
+        
+        return sign * y
+    
+    return 0.5 * (1 + erf_approx(z / math.sqrt(2)))
 
 
 def calculate_fragility_probability(pga: float, pga_mean: float, beta: float) -> float:
@@ -19,7 +46,7 @@ def calculate_fragility_probability(pga: float, pga_mean: float, beta: float) ->
     z = (1 / beta) * math.log(pga / pga_mean)
     
     # Return the cumulative probability using standard normal distribution
-    return stats.norm.cdf(z)
+    return standard_normal_cdf(z)
 
 
 @router.get("/fragility/basic", response_model=LatexEquation)
