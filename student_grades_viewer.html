@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Grades Viewer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .search-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        input[type="number"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c33;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: #efe;
+            color: #373;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #373;
+            margin: 20px 0;
+        }
+        
+        .student-info {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .student-info h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+            transition: all 0.2s;
+        }
+        
+        .grade {
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 8px 12px;
+            border-radius: 20px;
+            text-align: center;
+            min-width: 60px;
+        }
+        
+        .grade-excellent { background: #d4edda; color: #155724; }
+        .grade-good { background: #cce5ff; color: #004085; }
+        .grade-average { background: #fff3cd; color: #856404; }
+        .grade-poor { background: #f8d7da; color: #721c24; }
+        
+        .api-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .quick-links {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .quick-links a {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 20px;
+            border: 2px solid #667eea;
+            transition: all 0.2s;
+        }
+        
+        .quick-links a:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Student Grades Viewer</h1>
+        
+        <div class="search-section">
+            <div class="input-group">
+                <input type="number" id="aemInput" placeholder="Enter Student AEM (e.g., 7777)" min="1" max="99999">
+                <button onclick="fetchStudentGrades()" id="fetchBtn">Get Grades</button>
+            </div>
+            
+            <div class="quick-links">
+                <strong>Quick Test:</strong>
+                <a href="#" onclick="loadStudent(7777)">AEM 7777</a>
+                <a href="#" onclick="loadStudent(6609)">AEM 6609</a>
+                <a href="#" onclick="loadStudent(7845)">AEM 7845</a>
+                <a href="#" onclick="loadStudent(20026)">AEM 20026</a>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            🔄 Loading student data...
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="success" class="success" style="display: none;"></div>
+        
+        <div id="studentInfo" style="display: none;"></div>
+        <div id="gradesTable" style="display: none;"></div>
+        
+        <div class="api-info">
+            <strong>📡 API Endpoint:</strong> 
+            <a href="https://raildb-production.up.railway.app/docs" target="_blank">
+                https://raildb-production.up.railway.app
+            </a>
+            <br>
+            <strong>📚 Interactive Documentation:</strong> 
+            <a href="https://raildb-production.up.railway.app/docs" target="_blank">
+                View API Docs
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://raildb-production.up.railway.app';
+        
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+            document.getElementById('studentInfo').style.display = 'none';
+            document.getElementById('gradesTable').style.display = 'none';
+            document.getElementById('fetchBtn').disabled = true;
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('fetchBtn').disabled = false;
+        }
+        
+        function showError(message) {
+            hideLoading();
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = `❌ ${message}`;
+            errorDiv.style.display = 'block';
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.innerHTML = `✅ ${message}`;
+            successDiv.style.display = 'block';
+        }
+        
+        function loadStudent(aem) {
+            document.getElementById('aemInput').value = aem;
+            fetchStudentGrades();
+        }
+        
+        function getGradeClass(grade) {
+            if (grade >= 9.0) return 'grade-excellent';
+            if (grade >= 7.0) return 'grade-good';
+            if (grade >= 5.0) return 'grade-average';
+            return 'grade-poor';
+        }
+        
+        function formatGrade(grade) {
+            return parseFloat(grade).toFixed(2);
+        }
+        
+        function calculateStats(grades) {
+            if (grades.length === 0) return null;
+            
+            const gradeValues = grades.map(g => parseFloat(g.grade));
+            const total = gradeValues.reduce((sum, grade) => sum + grade, 0);
+            const average = total / gradeValues.length;
+            const min = Math.min(...gradeValues);
+            const max = Math.max(...gradeValues);
+            const passed = gradeValues.filter(g => g >= 5.0).length;
+            
+            return {
+                average: average.toFixed(2),
+                min: min.toFixed(2),
+                max: max.toFixed(2),
+                total: grades.length,
+                passed: passed,
+                passRate: ((passed / grades.length) * 100).toFixed(1)
+            };
+        }
+        
+        async function fetchStudentGrades() {
+            const aem = document.getElementById('aemInput').value;
+            
+            if (!aem) {
+                showError('Please enter a student AEM number');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const response = await fetch(`${API_BASE}/students/grades/${aem}`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error(`No grades found for student AEM ${aem}`);
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                }
+                
+                const grades = await response.json();
+                hideLoading();
+                displayGrades(aem, grades);
+                showSuccess(`Found ${grades.length} grade records for student ${aem}`);
+                
+            } catch (error) {
+                console.error('Error fetching grades:', error);
+                showError(error.message || 'Failed to fetch student grades. Please check your connection and try again.');
+            }
+        }
+        
+        function displayGrades(aem, grades) {
+            const stats = calculateStats(grades);
+            
+            // Display student info and stats
+            const studentInfoDiv = document.getElementById('studentInfo');
+            studentInfoDiv.innerHTML = `
+                <div class="student-info">
+                    <h2>Student AEM: ${aem}</h2>
+                    <p>Academic performance summary</p>
+                    
+                    ${stats ? `
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.average}</div>
+                            <div class="stat-label">Average Grade</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.total}</div>
+                            <div class="stat-label">Total Tests</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.passed}</div>
+                            <div class="stat-label">Passed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.passRate}%</div>
+                            <div class="stat-label">Pass Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.min} - ${stats.max}</div>
+                            <div class="stat-label">Grade Range</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            studentInfoDiv.style.display = 'block';
+            
+            // Display grades table
+            const tableDiv = document.getElementById('gradesTable');
+            
+            if (grades.length === 0) {
+                tableDiv.innerHTML = '<p>No grades found for this student.</p>';
+            } else {
+                // Sort grades by year (desc) and test
+                grades.sort((a, b) => {
+                    if (a.year !== b.year) return b.year - a.year;
+                    return a.test.localeCompare(b.test);
+                });
+                
+                let tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Test</th>
+                                <th>Grade</th>
+                                <th>Status</th>
+                                <th>Date Recorded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                grades.forEach(grade => {
+                    const gradeValue = parseFloat(grade.grade);
+                    const status = gradeValue >= 5.0 ? '✅ Pass' : '❌ Fail';
+                    const date = new Date(grade.created_at).toLocaleDateString();
+                    
+                    tableHTML += `
+                        <tr>
+                            <td><strong>${grade.year}</strong></td>
+                            <td>${grade.test}</td>
+                            <td><span class="grade ${getGradeClass(gradeValue)}">${formatGrade(gradeValue)}</span></td>
+                            <td>${status}</td>
+                            <td>${date}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += '</tbody></table>';
+                tableDiv.innerHTML = tableHTML;
+            }
+            
+            tableDiv.style.display = 'block';
+        }
+        
+        // Allow Enter key to trigger search
+        document.getElementById('aemInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fetchStudentGrades();
+            }
+        });
+        
+        // Load a default student on page load for demo
+        window.addEventListener('load', function() {
+            // You can uncomment the line below to load AEM 7777 by default
+            // loadStudent(7777);
+        });
+    </script>
+</body>
+</html>
